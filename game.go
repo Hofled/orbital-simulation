@@ -88,15 +88,12 @@ func handleInput(g *Game) error {
 
 func simulatePhysics(g *Game) error {
 	// calculate gravity and apply forces
-	for _, p1 := range g.planets {
-		for _, p2 := range g.planets {
-			if p1 == p2 {
-				continue
-			}
-			// gravityForce := physics.Gravitation(p1.Body, p2.Body)
-			// apply gravitational force
-			// physics.ApplyForce(p2.Body, gravityForce)
-		}
+	for _, pair := range g.planetPairs {
+		p1 := pair[0]
+		p2 := pair[1]
+		gravityForce := physics.Gravitation(p1.Body, p2.Body)
+		// apply gravitational force
+		physics.ApplyForce(p2.Body, gravityForce)
 	}
 
 	return nil

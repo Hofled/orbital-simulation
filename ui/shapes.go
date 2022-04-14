@@ -27,11 +27,11 @@ func Circle(img *ebiten.Image, x float32, y float32, r float32, c color.RGBA) {
 // draws an arrow from the x,y origin based on the vector values to a new
 func DrawArrowTo(img *ebiten.Image, x, y float64, arrowBodyWidth int, destVec *mat.VecDense, c color.Color) {
 	vecNorm := destVec.Norm(2)
-	height := int(math.Ceil(vecNorm))
+	height := uint64(math.Ceil(vecNorm))
 	arrowHeadWidth := int(arrowBodyWidth) * 4
 	arrowHeadHeight := float64(height) * 0.2
 
-	arrowImg := ebiten.NewImage(arrowHeadWidth, height)
+	arrowImg := ebiten.NewImage(arrowHeadWidth, int(height))
 	arrowImgOp := ebiten.DrawImageOptions{}
 
 	// draw arrow line from bottom center to top center of image
