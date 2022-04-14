@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"image/color"
+	"math"
 
 	"github.com/Hofled/orbital-simulation/consts"
 	"github.com/Hofled/orbital-simulation/physics"
@@ -14,12 +15,28 @@ import (
 	"golang.org/x/image/math/f64"
 )
 
+const (
+	maxTPS int     = 60
+	tps    float64 = 1 / float64(maxTPS)
+)
+
 type Game struct {
 	camera       ui.Camera
 	world        *ebiten.Image
 	screenHeight float64
 	screenWidth  float64
-	bodies       []*physics.Body
+	planets      []*physics.Planet
+	// planet pairs for gravitation comparison
+	planetPairs [][]*physics.Planet
+}
+
+func calcPlanetPairs(g *Game) {
+	for i := 0; i < len(g.planets)-1; i++ {
+		planet := g.planets[i]
+		for j := i + 1; j < len(g.planets); j++ {
+			g.planetPairs = append(g.planetPairs, []*physics.Planet{planet, g.planets[j]})
+		}
+	}
 }
 
 func handleInput(g *Game) error {
@@ -69,43 +86,60 @@ func handleInput(g *Game) error {
 	return nil
 }
 
-func (g *Game) Update() error {
-	for _, b1 := range g.bodies {
-		for _, b2 := range g.bodies {
-			if b1 == b2 {
+func simulatePhysics(g *Game) error {
+	// calculate gravity and apply forces
+	for _, p1 := range g.planets {
+		for _, p2 := range g.planets {
+			if p1 == p2 {
 				continue
 			}
-			// gravityForce := physics.Gravitation(b1, b2)
-
+			// gravityForce := physics.Gravitation(p1.Body, p2.Body)
+			// apply gravitational force
+			// physics.ApplyForce(p2.Body, gravityForce)
 		}
 	}
 
+	return nil
+}
+
+func (g *Game) Update() error {
 	// handle input
-	err := handleInput(g)
-	return err
+	if err := handleInput(g); err != nil {
+		return err
+	}
+
+	// simulate physics
+	if err := simulatePhysics(g); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// log scales the size of the planet
+func logScalePlanetSize(radius float64) float64 {
+	return math.Log(radius)
 }
 
 // notice that we always draw to the world, as that will be projected onto the screen by the camera
 func (g *Game) Draw(screen *ebiten.Image) {
+	// draw planets
+	for _, planet := range g.planets {
+		newRad := logScalePlanetSize(planet.Body.Radius)
+		ui.Circle(g.world, float32(planet.Body.Position.AtVec(0)), float32(planet.Body.Position.AtVec(1)), float32(newRad), planet.Color)
+		ui.DrawArrowTo(g.world, planet.Body.Position.AtVec(0), planet.Body.Position.AtVec(1), 3, planet.Body.Velocity, color.RGBA{0xff, 0, 0, 0xff})
+	}
+
+	// project to screen
+	g.camera.Render(g.world, screen)
+
+	// debug statistics
+	// =====================
 	worldX, worldY := g.camera.ScreenToWorld(ebiten.CursorPosition())
 	ebitenutil.DebugPrint(
 		screen,
 		fmt.Sprintf("TPS: %0.2f\nMove (WASD/Arrows)\nZoom (QE)\nRotate (R)\nReset (Space)\nCamera Speed (PageUp\\Down)\nEscape to quit", ebiten.CurrentTPS()),
 	)
-
-	_r, _g, _b, _a := color.White.RGBA()
-
-	worldW, worldH := g.world.Size()
-	worldCenterX := float32(worldW) / 2
-	worldCenterY := float32(worldH) / 2
-
-	ui.Circle(g.world, worldCenterX, worldCenterY, 50,
-		color.RGBA{
-			R: uint8(_r),
-			G: uint8(_g),
-			B: uint8(_b),
-			A: uint8(_a),
-		})
 
 	ebitenutil.DebugPrintAt(
 		screen,
@@ -114,9 +148,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			worldX, worldY),
 		0, int(g.screenHeight)-32,
 	)
-
-	// project to screen
-	g.camera.Render(g.world, screen)
+	// =====================
 }
 
 func New(screenWidth, screenHeight float64) *Game {
@@ -125,11 +157,13 @@ func New(screenWidth, screenHeight float64) *Game {
 		screenHeight: screenHeight,
 		camera:       ui.Camera{ViewPort: f64.Vec2{screenWidth, screenHeight}, Speed: 1},
 		world:        ebiten.NewImage(int(screenWidth), int(screenHeight)),
-		bodies: []*physics.Body{
+		planets: []*physics.Planet{
 			physics.Earth,
 			physics.Moon,
 		},
 	}
+	calcPlanetPairs(&g)
+	ebiten.SetMaxTPS(maxTPS)
 	return &g
 }
 

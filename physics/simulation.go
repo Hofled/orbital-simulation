@@ -11,13 +11,17 @@ import (
 // based on Newton's law of universal gravitation
 // https://en.wikipedia.org/wiki/Newton%27s_law_of_universal_gravitation#Vector_form
 func Gravitation(b1, b2 *Body) *mat.VecDense {
-	distanceVecDense := mat.NewVecDense(2, nil)
+	gravityVecDense := mat.NewVecDense(2, nil)
 	// calculate vector from b1 to b2
-	distanceVecDense.SubVec(b2.Position.TVec(), b1.Position.TVec())
-	distanceNorm := distanceVecDense.Norm(2)
+	gravityVecDense.SubVec(b2.Position.TVec(), b1.Position.TVec())
+	distanceNorm := gravityVecDense.Norm(2)
 	// normalize the distance vector
-	distanceVecDense.ScaleVec(1/distanceNorm, distanceVecDense.TVec())
+	gravityVecDense.ScaleVec(1/distanceNorm, gravityVecDense.TVec())
 	coefficient := -float64(constant.Gravitational) * (b1.Mass * b2.Mass) / (math.Pow(distanceNorm, 2))
-	distanceVecDense.ScaleVec(coefficient, distanceVecDense.TVec())
-	return distanceVecDense
+	gravityVecDense.ScaleVec(coefficient, gravityVecDense.TVec())
+	return gravityVecDense
+}
+
+func ApplyForce(b1 *Body, force *mat.VecDense) {
+	b1.Velocity.AddVec(b1.Velocity, force)
 }
