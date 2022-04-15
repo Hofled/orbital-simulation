@@ -14,9 +14,13 @@ import (
 	"golang.org/x/image/math/f64"
 )
 
+var (
+	simSpeedMultiplier         = 1
+	dt                 float64 = float64(simSpeedMultiplier) / float64(maxTPS)
+)
+
 const (
-	maxTPS int     = 60
-	dt     float64 = 1 / float64(maxTPS)
+	maxTPS int = 60
 )
 
 type Game struct {
@@ -32,8 +36,10 @@ type Game struct {
 func calcPlanetPairs(g *Game) {
 	for i := 0; i < len(g.planets)-1; i++ {
 		planet := g.planets[i]
-		for j := i + 1; j < len(g.planets); j++ {
-			g.planetPairs = append(g.planetPairs, []*physics.Planet{planet, g.planets[j]})
+		if planet.IsAttractor {
+			for j := i + 1; j < len(g.planets); j++ {
+				g.planetPairs = append(g.planetPairs, []*physics.Planet{planet, g.planets[j]})
+			}
 		}
 	}
 }
@@ -57,6 +63,21 @@ func handleInput(g *Game) error {
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyPageDown) {
 		g.camera.UpdateSpeed(-0.1)
+	}
+
+	if ebiten.IsKeyPressed(ebiten.KeyNumpadAdd) {
+		newMulti := simSpeedMultiplier + 1
+		if newMulti <= 60 {
+			simSpeedMultiplier = newMulti
+			dt = float64(simSpeedMultiplier) / float64(maxTPS)
+		}
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyNumpadSubtract) {
+		newMulti := simSpeedMultiplier - 1
+		if newMulti >= 0 {
+			simSpeedMultiplier = newMulti
+			dt = float64(simSpeedMultiplier) / float64(maxTPS)
+		}
 	}
 
 	if ebiten.IsKeyPressed(ebiten.KeyQ) {
