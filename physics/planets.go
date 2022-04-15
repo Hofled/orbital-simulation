@@ -15,7 +15,7 @@ type Planet struct {
 
 var (
 	Earth *Planet = &Planet{
-		Body:        NewBody(5.97237e24, 6356.752, mat.NewVecDense(2, []float64{250, 250}), mat.NewVecDense(2, []float64{0, 0})),
+		Body:        NewBody(5.97237e24, 6356.752, mat.NewVecDense(2, []float64{250, 250}), mat.NewVecDense(2, []float64{1, 0})),
 		Color:       color.RGBA{0, 0, 0xff, 0xff}, // blue colored
 		IsAttractor: true,
 	}
@@ -28,5 +28,5 @@ var (
 
 // log scales the size of the planet
 func LogScalePlanetSize(radius float64) float64 {
-	return math.Log(radius) / math.Log(1.6)
+	return math.Log(radius) / math.Log(1.5)
 }

@@ -114,8 +114,10 @@ func simulatePhysics(g *Game) error {
 		gravityForce := physics.Gravitation(p1.Body, p2.Body)
 		// apply gravitational force
 		physics.ApplyForce(p2.Body, gravityForce, dt)
-		// update position
-		physics.ApplyMovement(p2.Body, dt)
+	}
+	// update position of all objects
+	for _, planet := range g.planets {
+		physics.ApplyMovement(planet.Body, dt)
 	}
 
 	return nil
