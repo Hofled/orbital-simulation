@@ -27,9 +27,12 @@ func Circle(img *ebiten.Image, x float32, y float32, r float32, c color.RGBA) {
 // draws an arrow from the x,y origin based on the vector values to a new
 func DrawArrowTo(img *ebiten.Image, x, y float64, arrowBodyWidth int, destVec *mat.VecDense, c color.Color) {
 	vecNorm := destVec.Norm(2)
-	height := uint64(math.Ceil(vecNorm))
+	if math.IsNaN(vecNorm) {
+		return
+	}
+	height := math.Ceil(vecNorm)
 	arrowHeadWidth := int(arrowBodyWidth) * 4
-	arrowHeadHeight := float64(height) * 0.2
+	arrowHeadHeight := height * 0.25
 
 	arrowImg := ebiten.NewImage(arrowHeadWidth, int(height))
 	arrowImgOp := ebiten.DrawImageOptions{}
@@ -50,7 +53,8 @@ func DrawArrowTo(img *ebiten.Image, x, y float64, arrowBodyWidth int, destVec *m
 		c,
 	)
 
-	vecAngle := math.Atan2(destVec.AtVec(0), destVec.AtVec(1))
+	// flip sign of y value since screen coordinates or flipped
+	vecAngle := math.Atan2(destVec.AtVec(0), -destVec.AtVec(1))
 
 	// translate to origin of rotation for image (bottom middle)
 	arrowImgOp.GeoM.Translate(float64(-arrowHeadWidth/2), float64(-height))

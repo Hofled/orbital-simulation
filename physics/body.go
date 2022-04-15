@@ -16,6 +16,6 @@ func NewBody(mass, radius float64, initialPos *mat.VecDense) *Body {
 		Mass:     mass,
 		Radius:   radius,
 		Position: initialPos,
-		Velocity: mat.NewVecDense(2, []float64{100, 100}),
+		Velocity: mat.NewVecDense(2, []float64{0, 0}),
 	}
 }
