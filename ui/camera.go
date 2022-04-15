@@ -30,7 +30,7 @@ const (
 
 func (c *Camera) String() string {
 	return fmt.Sprintf(
-		"Top Left: %.1f, R: %d, Z: %d, S: %f",
+		"Top Left: %.1f, Rotation: %d, Zoom: %d, Speed: %f",
 		c.Position, c.Rotation, c.ZoomFactor, c.Speed,
 	)
 }

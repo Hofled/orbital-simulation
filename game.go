@@ -15,9 +15,8 @@ import (
 )
 
 const (
-	maxTPS int = 60
-	// TODO debug value scaled down for slower simulation
-	dt float64 = 0.05 / float64(maxTPS)
+	maxTPS int     = 60
+	dt     float64 = 1 / float64(maxTPS)
 )
 
 type Game struct {
@@ -91,7 +90,7 @@ func simulatePhysics(g *Game) error {
 	for _, pair := range g.planetPairs {
 		p1 := pair[0]
 		p2 := pair[1]
-		gravityForce := physics.Gravitation(p1.Body, p2.Body, physics.EarthMoonScaleRatio)
+		gravityForce := physics.Gravitation(p1.Body, p2.Body)
 		// apply gravitational force
 		physics.ApplyForce(p2.Body, gravityForce, dt)
 		// update position
@@ -124,7 +123,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	for _, planet := range g.planets {
 		newRad := physics.LogScalePlanetSize(planet.Body.Radius)
 		ui.Circle(g.world, float32(planet.Body.Position.AtVec(0)), float32(planet.Body.Position.AtVec(1)), float32(newRad), planet.Color)
-		ui.DrawArrowTo(g.world, planet.Body.Position.AtVec(0), planet.Body.Position.AtVec(1), 3, physics.GetScaledVec(planet.Body.Velocity, 15), color.RGBA{0xff, 0, 0, 0xff})
+		ui.DrawArrowTo(g.world, planet.Body.Position.AtVec(0), planet.Body.Position.AtVec(1), 5, physics.GetScaledVec(planet.Body.Velocity, 50), color.RGBA{0xff, 0, 0, 0xff})
 	}
 
 	// project to screen
@@ -136,6 +135,13 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	ebitenutil.DebugPrint(
 		screen,
 		fmt.Sprintf("TPS: %0.2f\nMove (WASD/Arrows)\nZoom (QE)\nRotate (R)\nReset (Space)\nCamera Speed (PageUp\\Down)\nEscape to quit", ebiten.CurrentTPS()),
+	)
+
+	// moon information
+	ebitenutil.DebugPrintAt(
+		screen,
+		fmt.Sprintf("Moon velocity: %v", g.planets[1].Body.Velocity),
+		0, int(g.screenHeight)-50,
 	)
 
 	ebitenutil.DebugPrintAt(

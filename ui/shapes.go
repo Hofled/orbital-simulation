@@ -24,6 +24,10 @@ func Circle(img *ebiten.Image, x float32, y float32, r float32, c color.RGBA) {
 	img.DrawTriangles(vs, is, cimg, op)
 }
 
+const (
+	minArrowHeadHeight = 5
+)
+
 // draws an arrow from the x,y origin based on the vector values to a new
 func DrawArrowTo(img *ebiten.Image, x, y float64, arrowBodyWidth int, destVec *mat.VecDense, c color.Color) {
 	vecNorm := destVec.Norm(2)
@@ -32,7 +36,7 @@ func DrawArrowTo(img *ebiten.Image, x, y float64, arrowBodyWidth int, destVec *m
 	}
 	height := math.Ceil(vecNorm)
 	arrowHeadWidth := int(arrowBodyWidth) * 4
-	arrowHeadHeight := height * 0.25
+	arrowHeadHeight := math.Max(minArrowHeadHeight, height*0.25)
 
 	arrowImg := ebiten.NewImage(arrowHeadWidth, int(height))
 	arrowImgOp := ebiten.DrawImageOptions{}
@@ -40,7 +44,7 @@ func DrawArrowTo(img *ebiten.Image, x, y float64, arrowBodyWidth int, destVec *m
 	// draw arrow line from bottom center to top center of image
 	ebitenutil.DrawRect(arrowImg,
 		float64((arrowHeadWidth/2)-(arrowBodyWidth/2)),
-		float64(arrowHeadHeight),
+		arrowHeadHeight,
 		float64(arrowBodyWidth),
 		float64(height),
 		c)

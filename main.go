@@ -8,8 +8,8 @@ import (
 )
 
 func main() {
-	screenWidth, screenHeight := ebiten.ScreenSizeInFullscreen()
 	ebiten.SetFullscreen(true)
+	screenWidth, screenHeight := ebiten.ScreenSizeInFullscreen()
 	ebiten.SetWindowTitle("Orbital Simulation")
 	simulation := New(float64(screenWidth), float64(screenHeight))
 	if err := ebiten.RunGame(simulation); err != nil && err.Error() != consts.ErrRegularTermination {
