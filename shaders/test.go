@@ -4,10 +4,9 @@
 package shaders
 
 func Fragment(position vec4, texCoord vec2, color vec4) vec4 {
-	baseColor := vec4(1, 0, 0, 1)
-
-	origin, _ := imageSrcRegionOnTexture()
-	distanceFromCenter := distance(origin, texCoord)
-	baseColor.a = baseColor.a - distanceFromCenter
-	return baseColor
+	_, size := imageSrcRegionOnTexture()
+	distanceFromCenterTexels := distance(size/2, texCoord)
+	res := imageSrc0UnsafeAt(texCoord)
+	res.a = res.a - distanceFromCenterTexels*2
+	return res
 }
