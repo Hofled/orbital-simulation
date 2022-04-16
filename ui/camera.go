@@ -90,22 +90,22 @@ func (c *Camera) Translate(moveDirection int) {
 	switch moveDirection {
 	case MoveDirectionUp:
 		{
-			c.Position[1] -= (1 * c.Speed)
+			c.Position[1] -= c.Speed
 			break
 		}
 	case MoveDirectionDown:
 		{
-			c.Position[1] += (1 * c.Speed)
+			c.Position[1] += c.Speed
 			break
 		}
 	case MoveDirectionRight:
 		{
-			c.Position[0] += (1 * c.Speed)
+			c.Position[0] += c.Speed
 			break
 		}
 	case MoveDirectionLeft:
 		{
-			c.Position[0] -= (1 * c.Speed)
+			c.Position[0] -= c.Speed
 			break
 		}
 	}

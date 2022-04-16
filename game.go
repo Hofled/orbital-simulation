@@ -5,8 +5,11 @@ import (
 	"fmt"
 	"image/color"
 
+	_ "embed"
+
 	"github.com/Hofled/orbital-simulation/consts"
 	"github.com/Hofled/orbital-simulation/physics"
+	"github.com/Hofled/orbital-simulation/shaders"
 	"github.com/Hofled/orbital-simulation/ui"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -17,6 +20,8 @@ import (
 var (
 	simSpeedMultiplier         = 1
 	dt                 float64 = float64(simSpeedMultiplier) / float64(maxTPS)
+	// TODO test shader rendering
+	shaderRect = ebiten.NewImage(200, 200)
 )
 
 const (
@@ -28,6 +33,7 @@ type Game struct {
 	world        *ebiten.Image
 	screenHeight float64
 	screenWidth  float64
+	shaders      map[string]*ebiten.Shader
 	planets      []*physics.Planet
 	// planet pairs for gravitation comparison
 	planetPairs [][]*physics.Planet
@@ -144,10 +150,17 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 	// draw planets
 	for _, planet := range g.planets {
-		newRad := physics.LogScalePlanetSize(planet.Body.Radius)
-		ui.Circle(g.world, float32(planet.Body.Position.AtVec(0)), float32(planet.Body.Position.AtVec(1)), float32(newRad), planet.Color)
-		ui.DrawArrowTo(g.world, planet.Body.Position.AtVec(0), planet.Body.Position.AtVec(1), 5, physics.GetScaledVec(planet.Body.Velocity, 50), color.RGBA{0xff, 0, 0, 0xff})
+		ui.Circle(g.world, float32(planet.Body.Position.AtVec(0)), float32(planet.Body.Position.AtVec(1)), float32(planet.DrawRadius), planet.Color)
+		ui.DrawArrowTo(g.world, planet.Body.Position.AtVec(0), planet.Body.Position.AtVec(1), 50, 5, planet.Body.Velocity, color.RGBA{0xff, 0, 0, 0xff})
 	}
+
+	// TODO test shader rendering
+	shaderRect.Fill(color.White)
+	shaderRectOp := &ebiten.DrawRectShaderOptions{}
+	shaderRectOp.GeoM.Translate(g.screenWidth/2, g.screenHeight/2)
+	shaderRectOp.Images[0] = shaderRect
+	w, h := shaderRect.Size()
+	g.world.DrawRectShader(w, h, g.shaders["Test"], shaderRectOp)
 
 	// project to screen
 	g.camera.Render(g.world, screen)
@@ -157,7 +170,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	worldX, worldY := g.camera.ScreenToWorld(ebiten.CursorPosition())
 	ebitenutil.DebugPrint(
 		screen,
-		fmt.Sprintf("TPS: %0.2f\nMove (WASD/Arrows)\nZoom (QE)\nRotate (R)\nReset (Space)\nCamera Speed (PageUp\\Down)\nEscape to quit", ebiten.CurrentTPS()),
+		fmt.Sprintf("TPS: %0.2f\nFPS: %0.2f\nMove (WASD/Arrows)\nZoom (QE)\nRotate (R)\nReset (Space)\nCamera Speed (PageUp\\Down)\nEscape to quit", ebiten.CurrentTPS(), ebiten.CurrentFPS()),
 	)
 
 	// moon information
@@ -177,7 +190,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	// =====================
 }
 
-func New(screenWidth, screenHeight float64) *Game {
+func New(screenWidth, screenHeight float64) (*Game, error) {
 	g := Game{
 		screenWidth:  screenWidth,
 		screenHeight: screenHeight,
@@ -187,10 +200,39 @@ func New(screenWidth, screenHeight float64) *Game {
 			physics.Earth,
 			physics.Moon,
 		},
+		shaders: map[string]*ebiten.Shader{},
 	}
+
+	// read shaders source
+	shadersSource, err := shaders.ReadShadersSource()
+	if err != nil {
+		return nil, err
+	}
+	// load shaders from source
+	err = loadShaders(&g, shadersSource)
+	if err != nil {
+		return nil, err
+	}
+
 	calcPlanetPairs(&g)
 	ebiten.SetMaxTPS(maxTPS)
-	return &g
+	return &g, nil
+}
+
+func loadShaders(g *Game, shaderSourceMap map[string][]byte) error {
+	if g.shaders == nil {
+		g.shaders = make(map[string]*ebiten.Shader)
+	}
+	for shaderName, shaderSource := range shaderSourceMap {
+		// load shader
+		s, err := ebiten.NewShader(shaderSource)
+		if err != nil {
+			return err
+		}
+		g.shaders[shaderName] = s
+	}
+
+	return nil
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
