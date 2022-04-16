@@ -10,10 +10,11 @@ import (
 	"gonum.org/v1/gonum/mat"
 )
 
+var circleImg = ebiten.NewImage(1, 1)
+
 // draws a circle on provided image
 func Circle(img *ebiten.Image, x float32, y float32, r float32, c color.RGBA) {
-	cimg := ebiten.NewImage(1, 1)
-	cimg.Fill(c)
+	circleImg.Fill(c)
 
 	circlePath := vector.Path{}
 	circlePath.MoveTo(x, y)
@@ -21,7 +22,7 @@ func Circle(img *ebiten.Image, x float32, y float32, r float32, c color.RGBA) {
 
 	vs, is := circlePath.AppendVerticesAndIndicesForFilling(nil, nil)
 	op := &ebiten.DrawTrianglesOptions{FillRule: ebiten.EvenOdd}
-	img.DrawTriangles(vs, is, cimg, op)
+	img.DrawTriangles(vs, is, circleImg, op)
 }
 
 const (
@@ -29,12 +30,8 @@ const (
 )
 
 // draws an arrow from the x,y origin based on the vector values to a new
-func DrawArrowTo(img *ebiten.Image, x, y float64, arrowBodyWidth int, destVec *mat.VecDense, c color.Color) {
-	vecNorm := destVec.Norm(2)
-	if math.IsNaN(vecNorm) {
-		return
-	}
-	height := math.Ceil(vecNorm)
+func DrawArrowTo(dst *ebiten.Image, x, y, arrowLen float64, arrowBodyWidth int, destVec *mat.VecDense, c color.Color) {
+	height := math.Ceil(arrowLen)
 	arrowHeadWidth := int(arrowBodyWidth) * 4
 	arrowHeadHeight := math.Max(minArrowHeadHeight, height*0.25)
 
@@ -51,9 +48,9 @@ func DrawArrowTo(img *ebiten.Image, x, y float64, arrowBodyWidth int, destVec *m
 
 	// draw arrow head
 	DrawTriangle(arrowImg,
-		mat.NewVecDense(2, []float64{float64(arrowHeadWidth / 2), 0}),
-		mat.NewVecDense(2, []float64{float64(0), arrowHeadHeight}),
-		mat.NewVecDense(2, []float64{float64(arrowHeadWidth), arrowHeadHeight}),
+		float32(arrowHeadWidth)*0.5, 0,
+		0, float32(arrowHeadHeight),
+		float32(arrowHeadWidth), float32(arrowHeadHeight),
 		c,
 	)
 
@@ -69,19 +66,39 @@ func DrawArrowTo(img *ebiten.Image, x, y float64, arrowBodyWidth int, destVec *m
 	// translate arrow
 	arrowImgOp.GeoM.Translate(x, y)
 
-	img.DrawImage(arrowImg, &arrowImgOp)
+	dst.DrawImage(arrowImg, &arrowImgOp)
 }
 
-func DrawTriangle(img *ebiten.Image, top, left, right *mat.VecDense, c color.Color) {
-	cimg := ebiten.NewImage(1, 1)
-	cimg.Fill(c)
+var triangleImg = ebiten.NewImage(1, 1)
 
-	vectorEndpath := vector.Path{}
-	vectorEndpath.MoveTo(float32(top.AtVec(0)), float32(top.AtVec(1)))
-	vectorEndpath.LineTo(float32(left.AtVec(0)), float32(left.AtVec(1)))
-	vectorEndpath.LineTo(float32(right.AtVec(0)), float32(right.AtVec(1)))
-	vs, is := vectorEndpath.AppendVerticesAndIndicesForFilling(nil, nil)
-	op := &ebiten.DrawTrianglesOptions{FillRule: ebiten.EvenOdd}
+func DrawTriangle(dst *ebiten.Image, topX, topY, leftX, leftY, rightX, rightY float32, c color.Color) {
+	triangleImg.Fill(c)
 
-	img.DrawTriangles(vs, is, cimg, op)
+	triangleVertices := []ebiten.Vertex{
+		{
+			DstX:   topX,
+			DstY:   topY,
+			ColorR: 1,
+			ColorG: 1,
+			ColorB: 1,
+			ColorA: 1},
+		{
+			DstX:   leftX,
+			DstY:   leftY,
+			ColorR: 1,
+			ColorG: 1,
+			ColorB: 1,
+			ColorA: 1},
+		{
+			DstX:   rightX,
+			DstY:   rightY,
+			ColorR: 1,
+			ColorG: 1,
+			ColorB: 1,
+			ColorA: 1},
+	}
+	triangleIndices := []uint16{0, 1, 2}
+	op := &ebiten.DrawTrianglesOptions{FillRule: ebiten.FillAll}
+
+	dst.DrawTriangles(triangleVertices, triangleIndices, triangleImg, op)
 }
