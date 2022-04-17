@@ -14,5 +14,5 @@ func Fragment(position vec4, texCoord vec2, color vec4) vec4 {
 		0.99,
 		1.01,
 		dot(dist, dist)*4.0)
-	return vec4(imageSrc0UnsafeAt(texCoord).rgb, val)
+	return imageSrc0UnsafeAt(texCoord) * val
 }
