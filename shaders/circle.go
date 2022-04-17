@@ -3,15 +3,12 @@
 
 package shaders
 
-var Offset vec2
-
 func Fragment(position vec4, texCoord vec2, color vec4) vec4 {
-	pos := (position.xy - Offset) / imageSrcTextureSize()
 	origin, size := imageSrcRegionOnTexture()
-	pos -= origin
-	pos /= size
+	normalizedTexCoord := texCoord - origin
+	normalizedTexCoord /= size
 	// distance from center of texture in texels
-	dist := pos - vec2(0.5)
+	dist := normalizedTexCoord - 0.5
 	// draws a circle that spans the entire rectangle's width and height of the texture it is drawn to
 	val := 1.0 - smoothstep(
 		0.99,
