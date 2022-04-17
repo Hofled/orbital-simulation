@@ -29,14 +29,11 @@ const (
 	minArrowHeadHeight = 5
 )
 
-func DrawCircle(src, dst *ebiten.Image, x, y float64, c color.Color, shaderMap map[string]*ebiten.Shader) {
+// applies a circular mask on the src image
+func ApplyCircleMask(src, dst *ebiten.Image, x, y float64, shaderMap map[string]*ebiten.Shader) {
 	shader := shaderMap["Circle"]
-	src.Fill(c)
 	shaderOp := &ebiten.DrawRectShaderOptions{}
 	shaderOp.GeoM.Translate(x, y)
-	shaderOp.Uniforms = map[string]interface{}{
-		"Offset": []float32{float32(x), float32(y)},
-	}
 	shaderOp.Images[0] = src
 	w, h := src.Size()
 	dst.DrawRectShader(w, h, shader, shaderOp)

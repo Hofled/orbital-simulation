@@ -4,8 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"image/color"
+	"log"
 
 	_ "embed"
+	_ "image/png"
 
 	"github.com/Hofled/orbital-simulation/consts"
 	"github.com/Hofled/orbital-simulation/physics"
@@ -22,12 +24,27 @@ var (
 	dt                 float64 = float64(simSpeedMultiplier) / float64(maxTPS)
 	isDebug            bool    = true
 	// TODO test shader rendering
-	shaderRect = ebiten.NewImage(600, 600)
+	gopherImg  *ebiten.Image
+	background *ebiten.Image
 )
 
 const (
 	maxTPS int = 60
 )
+
+func init() {
+	var err error
+	gopherImg, _, err = ebitenutil.NewImageFromFile("resources/gopher.png")
+	if err != nil {
+		log.Fatal(err)
+	}
+	op := &ebiten.DrawImageOptions{}
+	w, h := gopherImg.Size()
+	op.GeoM.Scale(1/float64(w/100), 1/float64(h/200))
+	background = ebiten.NewImage(100, 200)
+	background.Fill(color.White)
+	background.DrawImage(gopherImg, op)
+}
 
 type Game struct {
 	camera       ui.Camera
@@ -155,9 +172,9 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		ui.DrawArrowTo(g.world, planet.Body.Position.AtVec(0), planet.Body.Position.AtVec(1), 50, 5, planet.Body.Velocity, color.RGBA{0xff, 0, 0, 0xff})
 	}
 
-	shaderW, shaderH := shaderRect.Size()
+	shaderW, shaderH := background.Size()
 	// TODO test shader rendering
-	ui.DrawCircle(shaderRect, g.world, g.screenWidth/5-float64(shaderW/2), g.screenHeight/5-float64(shaderH/2), color.White, g.shaders)
+	ui.ApplyCircleMask(background, g.world, g.screenWidth/3-float64(shaderW/2), g.screenHeight/3-float64(shaderH/2), g.shaders)
 
 	// project to screen
 	g.camera.Render(g.world, screen)
