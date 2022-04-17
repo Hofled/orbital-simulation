@@ -20,8 +20,9 @@ import (
 var (
 	simSpeedMultiplier         = 1
 	dt                 float64 = float64(simSpeedMultiplier) / float64(maxTPS)
+	isDebug            bool    = true
 	// TODO test shader rendering
-	shaderRect = ebiten.NewImage(200, 200)
+	shaderRect = ebiten.NewImage(600, 600)
 )
 
 const (
@@ -154,17 +155,19 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		ui.DrawArrowTo(g.world, planet.Body.Position.AtVec(0), planet.Body.Position.AtVec(1), 50, 5, planet.Body.Velocity, color.RGBA{0xff, 0, 0, 0xff})
 	}
 
+	shaderW, shaderH := shaderRect.Size()
 	// TODO test shader rendering
-	shaderRect.Fill(color.White)
-	shaderRectOp := &ebiten.DrawRectShaderOptions{}
-	shaderRectOp.GeoM.Translate(g.screenWidth/2, g.screenHeight/2)
-	shaderRectOp.Images[0] = shaderRect
-	w, h := shaderRect.Size()
-	g.world.DrawRectShader(w, h, g.shaders["Test"], shaderRectOp)
+	ui.DrawCircle(shaderRect, g.world, g.screenWidth/5-float64(shaderW/2), g.screenHeight/5-float64(shaderH/2), color.White, g.shaders)
 
 	// project to screen
 	g.camera.Render(g.world, screen)
 
+	if isDebug {
+		drawDebugInfo(g, screen)
+	}
+}
+
+func drawDebugInfo(g *Game, screen *ebiten.Image) {
 	// debug statistics
 	// =====================
 	worldX, worldY := g.camera.ScreenToWorld(ebiten.CursorPosition())

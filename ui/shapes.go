@@ -29,6 +29,19 @@ const (
 	minArrowHeadHeight = 5
 )
 
+func DrawCircle(src, dst *ebiten.Image, x, y float64, c color.Color, shaderMap map[string]*ebiten.Shader) {
+	shader := shaderMap["Circle"]
+	src.Fill(c)
+	shaderOp := &ebiten.DrawRectShaderOptions{}
+	shaderOp.GeoM.Translate(x, y)
+	shaderOp.Uniforms = map[string]interface{}{
+		"Offset": []float32{float32(x), float32(y)},
+	}
+	shaderOp.Images[0] = src
+	w, h := src.Size()
+	dst.DrawRectShader(w, h, shader, shaderOp)
+}
+
 // draws an arrow from the x,y origin based on the vector values to a new
 func DrawArrowTo(dst *ebiten.Image, x, y, arrowLen float64, arrowBodyWidth int, destVec *mat.VecDense, c color.Color) {
 	height := math.Ceil(arrowLen)

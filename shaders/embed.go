@@ -12,8 +12,13 @@ func ReadShadersSource() (map[string][]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	circleShader, err := ShadersFS.ReadFile("circle.go")
+	if err != nil {
+		return nil, err
+	}
 
 	return map[string][]byte{
-		"Test": testShader,
+		"Test":   testShader,
+		"Circle": circleShader,
 	}, nil
 }
